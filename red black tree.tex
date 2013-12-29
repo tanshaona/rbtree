@@ -1,0 +1,313 @@
+% latex-chinese-template v0.3   http://ctex-kit.googlecode.com/
+%
+% See comments at the end of this file for more descriptions.
+
+% Change winfonts to cjkfonts to use arphic fonts.
+% Change winfonts to adobefonts to use Adobe fonts with xelatex.
+% See http://tug.ctan.org/tex-archive/language/chinese/ctex/doc/
+%  or http://ctex-kit.googlecode.com/svn/trunk/ctex/doc/
+%  for details about options of ctex macro package.
+
+\documentclass[winfonts,GBK,cs4size,a4paper,fancyhdr,fntef,hyperref]{ctexart}
+\ifxetex    % xelatex
+  \XeTeXinputencoding "GBK"
+\fi
+
+\ifpdf
+  % 需要 gbk2uni 处理
+
+  \IfFileExists{ccmap.sty}
+    {\usepackage{ccmap}}    % make chinese characters in pdf searchable
+    {}
+\fi
+
+
+
+
+% use dot language
+%\usepackage{dot2texi}
+%\usepackage{tikz}
+%\usetikzlibrary{shapes,arrows}
+\usepackage{graphicx}
+\usepackage{listings}
+
+
+
+\begin{document}
+
+\lstset{
+numberstyle=\tiny,
+frame=shadowbox,
+escapeinside=``
+}
+
+
+\title{Red-Black Tree}
+\author{汪超}
+
+\maketitle
+% \tableofcontents
+
+
+
+\section{Abstract}
+
+在1970年，John Hopcroft在balanced binary trees的基础了提出了一种名为2-3 search tree 的改进。随后，Bayer and McCreight进一步提出了B-trees，随后B-trees由Bayer简化形成了red-black trees。
+
+\subsection{2-3 search trees}
+
+2-3 search trees的基本规则如下：
+\begin{enumerate}
+  \item 所有的数据在叶子上出现；
+  \item 数据有序排列，从左边（minimum）到右边（maximum）；
+  \item 同一个节点到叶子的长度都是相同的；
+  \item 内部的节点有2到3个子树。
+\end{enumerate}
+
+因此如果树中有n个数据，那么2-3 tree的高度为$\log_{3}n \sim log_{2}n$之间，证明如下：
+    $$ to do is the prof of the height of the 2-3 tree $$
+非叶子节点不存储数据，但是包含一些存储在其子树中的节点的数据信息，考虑图\ref{fig:treeInteriorNode}所示：
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/TreeInteriorNode.ps}
+    \caption{A 2-3 Tree Interior Node} \label{fig:treeInteriorNode}
+\end{figure}
+
+在内部节点包含两个key：
+
+\begin{itemize}
+  \item mlow代表了middle subtree中最小的元素
+  \item rlow代表了right subtree中最小的元素
+\end{itemize}
+
+如果内部节点有3个子树，则有2个key，如果有两个子树，则只有一个key（mlow）。
+
+考虑一个完整的2-3 tree，如下图\ref{fig:tree example}所示
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/treeexample.ps}
+    \caption{A 2-3 Tree Example} \label{fig:tree example}
+\end{figure}
+
+观察存储在节点中的数据，我么可以发现数据是从左到右有序排列的，这样就给我提供了一种搜索的策略。在上面的例子中，如果我们要寻找89，那我们检查root中存储的数据，发现89比rlow还大，即比right subtree的最小值还大，于是我们进入right subtree进行查找，在下一个节点中，我们发现mlow 等于89，于是进入middle subtree进行查找，而叶子值89正是我们需要找的数。如果我们查找94，我们的查找路径和查找89 一样，但是此时是找不到想要的数据的，因为叶节点上的数据89比94 小。
+
+通过上面的例子我们可以发现，在2-3 search tree中查找一个key的过程，就是不断的进入最后面的一个子树，这个子树的最小值比key小，但有一个例外，就是当我们要找的key比节点中的mlow 和rlow都小，此时进入到左子树中查找。
+
+下面是具体的判断规则：
+
+\begin{lstlisting}[language={[ANSI]C}]
+locate(t,x) = // it is the interior node
+    if (x >= t.rlow) then locate(t.R,x)
+    else if ( x >= t.mlow ) then locate(t.M,x)
+    else locate(t.L,x)
+locate(leaf,x) = leaf // now we reach the leaf
+\end{lstlisting}
+
+上面算法的一个循环不变式是：循环进入的t的子树的最小值不大于x（除非x比树中的任何值都小），并且所有在此子树的右面的元素都大于x。
+
+那上面的算法的时间复杂度是多少呢？因为每次查找都是从root到达leaf，所以时间复杂度即是树的高度，而树的高度在$\log_{3}n \sim log_{2}n$之间，
+故时间复杂度为$O(logn)$
+
+接下去让我们来讨论下插入算法，看图\ref{fig:treeinsert}，我们想要插入数据5 和35，此时图中显示的数据排列是最后希望的顺序，
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/treeeinsert.ps}
+    \caption{A 2-3 Search Tree With Leaves t o Insert} \label{fig:treeinsert}
+\end{figure}
+
+如果我们在树中插入5，我们最后会到叶子3处，此时要插入一个新的页节点5，方法如下：
+
+\begin{enumerate}
+  \item 使得叶子节点8变为right subtree
+  \item 设置rlow为8
+  \item 新建一个新的叶节点，并将其设置middle subtree
+  \item 设置mlow为5
+\end{enumerate}
+
+我们接着来考虑35，最后我们会到达26，此时26 的父节点是一个有3个孩子的内节点，此时情况与插入5不同，
+此时我们必须要将26的父节点加上一个新的叶节点，同时分成两个各包含两个叶节点的内节点，具体的情况看图\ref{fig:treeinsert2}
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/treeeinsert2.ps}
+    \caption{A 2-3 Search Tree With an Int error Node to Insert} \label{fig:treeinsert2}
+\end{figure}
+
+现在我们有了一个新的内节点，并且有35和44两个子节点。到这一步，所有内部节点的值都已经设置妥当了，下一步我们需要将新的节点插入到树中。
+
+此处我们需要明确一点：
+
+\emph{我们在插入新节点的时候，除了要出入的父节点改变为，其他节点都不会改变。}
+
+这是因为父节点的mlow和rlow是从middle subtree和right subtree的最左边的元素得到的（因为mlow和rlow都是各子树中的最小值）。
+
+我们回到之前插入的问题，此时我们要将新的节点插入到树中，此时我们知道的一些细节有：
+
+\begin{description}
+  \item[a] 节点内的数据时(44,-)
+  \item[b] 它因该插入到节点(26,-)的右边
+  \item[c] 子树中最小的叶节点是35
+\end{description}
+
+因为(26,-)的父节点有3个子树，所以此时我们要将新节点插入，则必须要将父节点分裂成两个子节点，就像我们在前面图\ref{fig:treeinsert2}中做的一样。此处有所不同的是，此时(26,-)的父节点是root，所以分裂后，必须要有个新的root，此时注意到middle subtree中最小的是35，分裂重组完后如图
+\ref{fig:treeinsert3} 所示:
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/treeeinsert3.ps}
+    \caption{The Final 2-3 Search Tree} \label{fig:treeinsert3}
+\end{figure}
+
+让我们回顾下，如果我们要插入到一个只有两个子树的父节点，此时思路很简单，但是当我们要插入到一个有3个子树的父节点时，事情就不再简单了，一个新的节点被创建出来，然后此时父节点将会有4个节点，我们必须要将父节点分裂成两个节点。
+
+如果我们总是将节点插入到另一个节点的右边，则此时有3种情况，在图\ref{fig:node with 3} 中列出来了。
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/nodewith3}
+    \caption{Insertion Cases for Nodes with 3 Children} \label{fig:node with 3}
+\end{figure}
+
+此处有一种情况没有列出来，当要加入的节点比在最左面时，此时我们可以通过交换加入节点和最左边的节点变成上述的情况1.
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/nodewith3case4.eps}
+    \caption{Dealing with a Minimum Value} \label{fig:nodewith3case4}
+\end{figure}
+
+
+现在我们来定义插入算法，首先我们通过locate(t,x)得到要插入位置的左边一个叶子，如果插入的节点比树中的节点都小，此时得到树中最左边的节点，此时我们交换两个节点，为了完成插入，我们定义几个新的函数，第一个createleaf (x)，函数返回一个新的叶子，第二个是函数attach(t,p,q,value(q))，函数将叶子q插入到叶子p的左边，此时树是t。
+
+\begin{lstlisting}
+insert(t,x)
+PRE:  t`是一个` tree
+POST: x`已经被插入到树中`
+
+p = locate(t,x)
+q = createleaf(x)
+if value(p) > x then swap(p,q)
+attach(t,p,q,value(q))
+\end{lstlisting}
+
+插入算法中考虑到了如果插入进去的数比树中所有数都小的情况，此时如图\ref{fig:nodewith3case4}所示交换两个节点。下面给出attach的描述：
+
+\begin{lstlisting}
+attach(t,p,q,qlow)
+PRE: t`是一颗`2-3tree
+     p`指向了树中中的一个节点`
+     q`指向了一颗树的root或者一个leaf节点，p和q表示的节点在同一个高度`
+     qlow`是q中最小的数`
+     `在q中的页节点都比p中的叶节点大，但是比在t中的在p的右边的子树中的页节点小`
+POST: q `已经加入到树中了`
+\end{lstlisting}
+
+我们首先考虑，p是否是t的root，如果是，则我们被迫要重新构建一个root，然后将p和q都连接到新的root上去。此时我们需要一个新的方法来完成添加操作，函数connect(p,r,position)完成整个功能，将p添加到r的left，middle，right上去，图\ref{fig:treeInsertRoot}给出了示例
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/insertAsRoot}
+    \caption{Inserting at he Root} \label{fig:treeInsertRoot}
+\end{figure}
+
+如果p有个父节点，则此时父节点或者有2个或者3个子树，下面先给出有父节点有2个子树的情形：
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/parentwith2sub}
+    \caption{Inserting with 2 subtrees} \label{fig:parentwith2sub}
+\end{figure}
+
+当父节点有3个子树的情形在图\ref{fig:node with 3}中描述了，父节点必须分裂为2个子节点，为此我们首先建立一个新的内节点，随后两个子树将会被加上去，
+我们根据从右往往的顺序依次介绍各种各样情况下的操作，先是插入的是左右边的情形：
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[scale=0.5]{img/parentwith3sub1}
+    \caption{Inserting with 2 subtrees} \label{fig:parentwith2sub}
+\end{figure}
+
+其他情形类似，关键在于准确的设置新建节点的mlow和rlow。
+
+
+\end{document}
+
+%%%%%%%%%%%%%%%%%%% END %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% How to compile:
+%   install TeXLive 2009 as described below;
+%   if you use adobefonts with xelatex, put Adobe fonts into ~/.fonts (Linux) or C:\WINDOWS\fonts (Windows);
+%   else put sim*.ttf, sim*.ttc  into ~/.fonts and $TEXMFHOME/fonts/truetype/sim/ ;
+%   See http://code.google.com/p/ctex-kit/wiki/SimpleChineseTemplates and Makefile for detailed building instructions.
+%
+%%%%%%%%%%%%%%%%%%% ENVIRONMENT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Tested with TeXLive 20090909 on Debian Squeeze: (use `tlmgr show xxx` for details)
+%  xetex        r14602  3.1415926-2.2-0.9995.2
+%  pdftex       r14549  3.1415926-1.40.10-2.2
+%  ctex         r14619  0.93    (buggy, use r167 at http://ctex-kit.googlecode.com/)
+%  zhmetrics    r14469          (buggy, use r167 at http://ctex-kit.googlecode.com/)
+%  cjk          r15155  4.8.2
+%  xecjk        r14567  2.3.5   (outdated, use r167 at http://ctex-kit.googlecode.com/)
+%  arphic       r13822
+%
+% Way to install TeXLive 2009:
+%  install-tl -repository http://ftp.ctex.org/mirrors/texlive/tlnet/  -profile texlive.profile
+%
+% Content of texlive.profile(without the leading "%" and white spaces):
+%   # texlive.profile written on Fri Sep  4 07:00:20 2009 UTC
+%   # It will NOT be updated and reflects only the
+%   # installation profile at installation time.
+%   selected_scheme scheme-basic
+%   TEXDIR ~/texlive/2009
+%   TEXDIRW ~/texlive/2009
+%   TEXMFHOME ~/texmf
+%   TEXMFLOCAL ~/texlive/texmf-local
+%   TEXMFSYSCONFIG ~/texlive/2009/texmf-config
+%   TEXMFSYSVAR ~/texlive/2009/texmf-var
+%   binary_i386-linux 1
+%   collection-basic 1
+%   collection-fontsrecommended 1
+%   collection-langcjk 1
+%   collection-langlatin 1
+%   collection-latex 1
+%   collection-latexrecommended 1
+%   collection-xetex 1
+%   from_dvd 0
+%   option_desktop_integration 1
+%   option_doc 0
+%   option_file_assocs 1
+%   option_fmt 1
+%   option_letter 0
+%   option_path 0
+%   option_post_code 1
+%   option_src 0
+%   option_sys_bin /usr/local/bin
+%   option_sys_info /usr/local/info
+%   option_sys_man /usr/local/man
+%   option_w32_multi_user 1
+%   option_write18_restricted 1
+
+% View the generated pdf on Debian Squeeze(20090909) with:
+%  xpdf (3.02-1.4+lenny1) + xpdf-chinese-simplified (20040727-1, depends cmap-adobe-gb1 (0+20051207-5))
+%  evince (2.26.2-2) + poppler-data (0.2.1-5)
+% !!! Remember installing poppler-data because it contains data about cmap-adobe-*.
+
+%
+% Hope these information useful for TeX newbies :-)
+%   Liu Yubao <yubao.liu at gmail dot com>
+%
+% ChangeLog:
+%   2009-09-11  Liu Yubao
+%       * initial version, v0.1
+%
+%   2009-09-13  Liu Yubao
+%       * use zhwinfonts to embed truetype fonts with pdflatex and dvipdfmx
+%       * set hyperref properly for different encodings and TeX engines to avoid garbled bookmarks
+%       % release v0.2
+%
+%   2010-06-20  Liu Haiyang
+%       * simpify zhwinfonts and hyperref, v0.3
+%

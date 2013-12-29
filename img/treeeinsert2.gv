@@ -1,0 +1,25 @@
+graph {
+	nodesep=.3;
+	inner1 [shape=record,label="<mlow> 17|<rlow> 65",style=filled, fillcolor=yellow, fontcolor=black];
+	inner2 [shape=record,label="<mlow>  5|<rlow> 8", style=filled, fillcolor=yellow, fontcolor=black];
+	inner3 [shape=record,label="<mlow> 26|<rlow> -",style=filled, fillcolor=yellow, fontcolor=black];
+	inner5 [shape=record,label="<mlow> 44|<rlow> -",style=filled, fillcolor=yellow, fontcolor=black];
+	inner4 [shape=record,label="<mlow> 89|<rlow> -", style=filled, fillcolor=yellow, fontcolor=black];
+	
+	
+	inner1 -- inner2
+	inner1 -- inner3
+	inner1 -- inner5 [color=white]
+	inner1 -- inner4
+
+	node [shape=circle,style=filled, fillcolor=gray]
+	{rank=same 3 5 8 17 26 35 44 65 89}
+	inner2 -- 3
+	inner2 -- 5
+	inner2:rlow -- 8
+	inner3 -- {17,26}
+	inner5 -- {35,44}
+	inner4 -- {65,89}
+	
+
+}

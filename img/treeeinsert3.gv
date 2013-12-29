@@ -1,0 +1,24 @@
+graph {
+	nodesep=.3;
+	node [shape=record,style=filled, fillcolor=yellow, fontcolor=black]
+	inner1 [label="<mlow> 35|<rlow> -"];
+	inner2 [label="<mlow> 17|<rlow> -"];
+	inner3 [label="<mlow> 65|<rlow> -"];
+	inner4 [label="<mlow> 5 |<rlow> 8"];
+	inner5 [label="<mlow> 26|<rlow> -"];
+	inner6 [label="<mlow> 44|<rlow> -"];
+	inner7 [label="<mlow> 89|<rlow> -"];
+
+	inner1 -- {inner2,inner3}
+	inner2 -- {inner4,inner5}
+	inner3 -- {inner6,inner7}
+	
+	node [shape=circle,style=filled, fillcolor=gray, fontcolor=black]
+	inner4 -- {3,5,8}
+	inner5 -- {17,26}
+	inner6 -- {35,44}
+	inner7 -- {65,89}
+	
+	
+
+}

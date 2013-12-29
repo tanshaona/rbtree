@@ -1,0 +1,8 @@
+graph {
+	struct [shape=record,label="<mlow> mlow|<rlow> rlow",style=filled, fillcolor=yellow, fontcolor=black];
+	node [shape=triangle,height=2,style=filled, fillcolor=gray,fontcolor=black,fontsize=14]
+	lstruct [lable="L"]
+	mstruct [lable="M"]
+	rstruct [lable="R"]
+	struct -- {lstruct,mstruct,rstruct}
+}

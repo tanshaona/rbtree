@@ -1,0 +1,43 @@
+graph {
+	
+	
+		
+		node [shape=record,style=filled, fillcolor=yellow]
+		{
+		rank=same;
+		inner11 [label="<mlow> 26|<rlow> 44"];
+		inner12 [label="<mlow> 19|<rlow>  -"];
+		inner13 [label="<mlow> 44|<rlow>  -"];
+		}
+		node [shape=circle,style=filled, fillcolor=gray]
+		{
+		rank=same
+		c1 [lable="17"]
+		c2 [lable="19"]
+		c3 [lable="26"]
+		c4 [lable="44"]
+		
+		c5 [lable="17"]
+		c6 [lable="19"]
+		c7 [lable="26"]
+		c8 [lable="44"]
+		}
+		
+		subgraph g11 {
+			
+			inner11 -- c1
+			inner11 -- c2 [color=white]
+			inner11 -- {c3,c4}
+		}
+		subgraph g12 {
+			inner12 -- {c5,c6}
+			inner13 -- {c7,c8}
+		}
+		inner11 -- inner12 [lhead=g11,ltail=g12]
+		
+		
+	
+	
+	
+
+}
